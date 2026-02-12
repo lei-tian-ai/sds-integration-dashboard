@@ -225,49 +225,13 @@ const DashboardCompact = () => {
   return (
     <div className="flex-1 overflow-auto">
       <div className="p-6 pl-20">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Vehicle Integration Dashboard</h1>
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">SDS integration dashboard -- Onroad</h1>
 
         {/* 3-column grid */}
         <div className="grid grid-cols-3 gap-4">
-          {/* Widget 1: Cars in Build (scrollable table) */}
-          <div className="bg-white rounded-lg border border-gray-300 p-4 flex flex-col h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">Cars Built</h2>
-            <div className="overflow-auto flex-1">
-              <table className="w-full text-xs border-collapse">
-                <thead className="sticky top-0 bg-white">
-                  <tr className="border-b border-gray-200 text-left text-gray-600">
-                    <th className="py-1 pr-2">Epic</th>
-                    <th className="py-1 pr-2">Start</th>
-                    <th className="py-1 pr-2">Finish</th>
-                    <th className="py-1 pr-2">Days</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {epicRows.map((row, idx) => (
-                    <tr key={`${row.epic_key}-${idx}`} className="border-b border-gray-100 hover:bg-gray-50">
-                      <td className="py-0.5 pr-2">
-                        <a
-                          href={`https://appliedintuition.atlassian.net/browse/${row.epic_key}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-primary hover:underline"
-                        >
-                          {row.vehicle_name || row.epic_key}
-                        </a>
-                      </td>
-                      <td className="py-0.5 pr-2 whitespace-nowrap text-gray-700">{formatDateOnly(row.start_time)}</td>
-                      <td className="py-0.5 pr-2 whitespace-nowrap text-gray-700">{formatDateOnly(row.finish_time)}</td>
-                      <td className="py-0.5 pr-2 font-mono">{row.build_days}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-
-          {/* Widget 2: Time in Build Chart */}
+          {/* Widget 1: Time in Build Chart */}
           <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Time in Build</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">#1 Time in Build</h2>
             <p className="text-xs text-gray-500 mb-3">Average days by vehicle type</p>
             <ResponsiveContainer width="100%" height="85%">
               <LineChart data={chartData} margin={{ top: 5, right: 80, left: -20, bottom: 5 }}>
@@ -307,7 +271,7 @@ const DashboardCompact = () => {
 
           {/* Widget 3: VOS Tickets */}
           <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">VOS Tickets in Build</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">#2 Engineer Touch Time in Bringup</h2>
             <p className="text-xs text-gray-500 mb-3">Vehicle OS engineer workload</p>
             <ResponsiveContainer width="100%" height="85%">
               <LineChart data={vosData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
@@ -325,7 +289,7 @@ const DashboardCompact = () => {
 
           {/* Widget 4: Build Bugs */}
           <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Bug Tickets in Build</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">#4 Build Issues Caught After Release to Calibration</h2>
             <p className="text-xs text-gray-500 mb-3">Issues caught after calibration</p>
             <ResponsiveContainer width="100%" height="85%">
               <LineChart data={bugsData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
@@ -343,7 +307,7 @@ const DashboardCompact = () => {
 
           {/* Widget 5: MTBF */}
           <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Mean Time Between Failure (MTBF)</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">#3 Mean Time Between Failure (MTBF)</h2>
             <p className="text-xs text-gray-500 mb-3">Vehicle stability failures (operation hours pending)</p>
             <ResponsiveContainer width="100%" height="85%">
               <LineChart data={mtbfData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
@@ -359,7 +323,7 @@ const DashboardCompact = () => {
 
           {/* Widget 6: Average Deployment Time -- weekly */}
           <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Avg Deployment Time -- weekly</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">#5 Average Deployment Time -- weekly</h2>
             <p className="text-xs text-gray-500 mb-3">BuildKite deployment duration (minutes)</p>
             <ResponsiveContainer width="100%" height="85%">
               <LineChart data={deployTimeData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
@@ -375,7 +339,7 @@ const DashboardCompact = () => {
 
           {/* Widget 7: Deployment Failure Rate -- weekly */}
           <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Deployment Failure Rate -- weekly</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">#6 Stack Deployment Failure Rate -- weekly</h2>
             <p className="text-xs text-gray-500 mb-3">BuildKite deployment success vs. failure</p>
             <ResponsiveContainer width="100%" height="85%">
               <LineChart data={deployFailureData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
@@ -409,7 +373,7 @@ const DashboardCompact = () => {
 
           {/* Widget 8: Average Deployment Time -- daily */}
           <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Avg Deployment Time -- daily</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">#5 Average Deployment Time -- daily</h2>
             <p className="text-xs text-gray-500 mb-3">BuildKite deployment duration (minutes, last 30 days)</p>
             <ResponsiveContainer width="100%" height="85%">
               <LineChart data={deployTimeDataDaily} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
@@ -425,7 +389,7 @@ const DashboardCompact = () => {
 
           {/* Widget 9: Deployment Failure Rate -- daily */}
           <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Deployment Failure Rate -- daily</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">#6 Stack Deployment Failure Rate -- daily</h2>
             <p className="text-xs text-gray-500 mb-3">BuildKite deployment success vs. failure (last 30 days)</p>
             <ResponsiveContainer width="100%" height="85%">
               <LineChart data={deployFailureDataDaily} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>

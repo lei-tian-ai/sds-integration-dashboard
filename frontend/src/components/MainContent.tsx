@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import DashboardCompact from './DashboardCompact'
+import DetailedData from './DetailedData'
 import About from './About'
 
 interface ApiResponse {
@@ -30,6 +31,10 @@ const MainContent = ({ activePage }: MainContentProps) => {
 
   if (activePage === 'dashboard') {
     return <DashboardCompact />
+  }
+
+  if (activePage === 'detailed-data') {
+    return <DetailedData />
   }
 
   if (activePage === 'about') {

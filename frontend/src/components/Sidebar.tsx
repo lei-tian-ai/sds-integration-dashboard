@@ -8,6 +8,7 @@ interface SidebarProps {
 const Sidebar = ({ activePage, setActivePage, isOpen, setIsOpen }: SidebarProps) => {
   const pages = [
     { id: 'dashboard', label: 'KPI Dashboard' },
+    { id: 'detailed-data', label: 'Detailed Data' },
     { id: 'about', label: 'About' },
   ]
 

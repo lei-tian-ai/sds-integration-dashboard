@@ -319,7 +319,7 @@ const DashboardCompact = () => {
 
           {/* Widget 4: Build Bugs */}
           <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">#4 Build Issues Caught After Release to Calibration</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">#4 Issues Caught after Build Complete</h2>
             <p className="text-xs text-gray-500 mb-3">Issues caught after calibration</p>
             <ResponsiveContainer width="100%" height="85%">
               <LineChart data={bugsData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
@@ -353,7 +353,7 @@ const DashboardCompact = () => {
 
           {/* Widget 7: Deployment Failure Rate -- weekly */}
           <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">#6 Stack Deployment Failure Rate -- weekly</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">#6 Deployment Failure Rate -- weekly</h2>
             <p className="text-xs text-gray-500 mb-3">BuildKite deployment success vs. failure</p>
             <ResponsiveContainer width="100%" height="85%">
               <LineChart data={deployFailureData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
@@ -403,7 +403,7 @@ const DashboardCompact = () => {
 
           {/* Widget 9: Deployment Failure Rate -- daily */}
           <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">#6 Stack Deployment Failure Rate -- daily</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">#6 Deployment Failure Rate -- daily</h2>
             <p className="text-xs text-gray-500 mb-3">BuildKite deployment success vs. failure (last 30 days)</p>
             <ResponsiveContainer width="100%" height="85%">
               <LineChart data={deployFailureDataDaily} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
@@ -437,7 +437,7 @@ const DashboardCompact = () => {
 
           {/* Widget 10: Data Collection Efficiency */}
           <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">#7 Data Collection Efficiency</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">#7 Data Collection Efficiency (mock data)</h2>
             <p className="text-xs text-gray-500 mb-3">Valid data hours / Total driving hours (Target: &gt;95%)</p>
             <ResponsiveContainer width="100%" height="85%">
               <LineChart data={dataCollectionEfficiency} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>

@@ -1327,12 +1327,12 @@ func kpiDataCollectionEfficiency(c *gin.Context) {
 	var weeks []string
 	var efficiencyPercentages []float64
 
-	// Generate mock data with some variation around 95% target
+	// Generate mock data with some variation around 75%
 	for weekStart := startDate; weekStart.Before(now); weekStart = weekStart.AddDate(0, 0, 7) {
 		weeks = append(weeks, weekKey(weekStart))
-		// Mock data: efficiency between 92% and 98%
+		// Mock data: efficiency between 72% and 78%
 		// Add some realistic variation
-		baseEfficiency := 95.0
+		baseEfficiency := 75.0
 		variation := float64((len(weeks) % 5) - 2) // -2 to +2
 		efficiency := baseEfficiency + variation
 		efficiencyPercentages = append(efficiencyPercentages, efficiency)

@@ -1,0 +1,13 @@
+name = "sds-integration-dashboard"
+enable_filestore = false
+enable_postgres = false
+enable_mysql = false
+enable_secrets = true
+enable_api_gateway = false
+enable_slack = true
+
+[metadata]
+  owner = "lei@applied.co"
+  description = "Vehicle Build KPI Dashboard - System integration metrics for SDS team"
+
+# JIRA: set JIRA_DOMAIN, JIRA_EMAIL in env and JIRA_API_TOKEN in Apps Platform secrets (see docs/jira-setup.md)

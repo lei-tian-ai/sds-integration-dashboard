@@ -17,6 +17,46 @@ import (
 // Rate limiter for BuildKite API (200 req/min = ~3 req/sec)
 var buildkiteRateLimiter = time.NewTicker(350 * time.Millisecond) // ~2.85 req/sec to be safe
 
+// Cache for BuildKite data
+var (
+	buildkiteCache      *BuildKiteCacheData
+	buildkiteCacheMutex sync.RWMutex
+	buildkiteCacheTTL   = 5 * time.Minute
+)
+
+type BuildKiteCacheData struct {
+	Builds    []BuildkiteBuild
+	FetchedAt time.Time
+}
+
+func getCachedBuilds(c *gin.Context, token, org string, createdFrom time.Time) ([]BuildkiteBuild, error) {
+	buildkiteCacheMutex.RLock()
+	if buildkiteCache != nil && time.Since(buildkiteCache.FetchedAt) < buildkiteCacheTTL {
+		builds := buildkiteCache.Builds
+		buildkiteCacheMutex.RUnlock()
+		log.Printf("[BuildKite Cache] Using cached data (%d builds, age: %v)", len(builds), time.Since(buildkiteCache.FetchedAt))
+		return builds, nil
+	}
+	buildkiteCacheMutex.RUnlock()
+
+	// Cache miss or expired, fetch new data
+	builds, err := fetchBuildsParallel(c, token, org, createdFrom)
+	if err != nil {
+		return nil, err
+	}
+
+	// Update cache
+	buildkiteCacheMutex.Lock()
+	buildkiteCache = &BuildKiteCacheData{
+		Builds:    builds,
+		FetchedAt: time.Now(),
+	}
+	buildkiteCacheMutex.Unlock()
+	log.Printf("[BuildKite Cache] Updated cache with %d builds", len(builds))
+
+	return builds, nil
+}
+
 // fetchBuildsFromPipeline fetches builds from a single pipeline with parallel pagination
 func fetchBuildsFromPipeline(c *gin.Context, token, org, pipeline string, createdFrom time.Time) ([]BuildkiteBuild, error) {
 	// First, fetch page 1 to check total count
@@ -171,7 +211,238 @@ func fetchBuildsParallel(c *gin.Context, token, org string, createdFrom time.Tim
 	return allBuilds, nil
 }
 
-// kpiBuildkiteCombined returns both deployment time and failure rate in a single request
+// kpiBuildkiteCombinedAll returns both weekly and daily metrics in a single request
+func kpiBuildkiteCombinedAll(c *gin.Context) {
+	token, org, ok := buildkiteConfig()
+	if !ok {
+		missing := buildkiteConfigMissing()
+		c.JSON(http.StatusServiceUnavailable, gin.H{
+			"error":   "BuildKite not configured",
+			"missing": missing,
+			"hint":    "Set BUILDKITE_TOKEN and BUILDKITE_ORG in .env",
+		})
+		return
+	}
+
+	// Fetch builds from last 3 months (fetch once, use for both weekly and daily)
+	threeMonthsAgo := time.Now().AddDate(0, -3, 0)
+	thirtyDaysAgo := time.Now().AddDate(0, 0, -30)
+	startTime := time.Now()
+
+	builds, err := getCachedBuilds(c, token, org, threeMonthsAgo)
+	if err != nil {
+		c.JSON(http.StatusBadGateway, gin.H{"error": "Failed to fetch builds: " + err.Error()})
+		return
+	}
+
+	fetchDuration := time.Since(startTime)
+	log.Printf("[BuildKite Combined] Processing %d builds", len(builds))
+
+	// Process data for weekly metrics
+	weekDurations := make(map[string][]float64)
+	weekPassed := make(map[string]int)
+	weekFailed := make(map[string]int)
+	weeklyDeploymentCount := 0
+	weeklyPassedCount := 0
+	weeklyFailedCount := 0
+
+	// Process data for daily metrics (last 30 days only)
+	dayDurations := make(map[string][]float64)
+	dayPassed := make(map[string]int)
+	dayFailed := make(map[string]int)
+	dailyDeploymentCount := 0
+	dailyPassedCount := 0
+	dailyFailedCount := 0
+
+	for _, build := range builds {
+		if !isDeploymentPipeline(build) {
+			continue
+		}
+
+		finishedAt, okFinish := parseTime(build.FinishedAt)
+		if !okFinish {
+			continue
+		}
+
+		week := weekKey(finishedAt)
+		day := dayKey(finishedAt)
+
+		// Process for weekly
+		weeklyDeploymentCount++
+		if build.State == "passed" {
+			startedAt, okStart := parseTime(build.StartedAt)
+			if okStart && finishedAt.After(startedAt) {
+				durationMinutes := finishedAt.Sub(startedAt).Minutes()
+				weekDurations[week] = append(weekDurations[week], durationMinutes)
+			}
+			weekPassed[week]++
+			weeklyPassedCount++
+		}
+		if build.State == "failed" {
+			weekFailed[week]++
+			weeklyFailedCount++
+		}
+
+		// Process for daily (last 30 days only)
+		if finishedAt.After(thirtyDaysAgo) {
+			dailyDeploymentCount++
+			if build.State == "passed" {
+				startedAt, okStart := parseTime(build.StartedAt)
+				if okStart && finishedAt.After(startedAt) {
+					durationMinutes := finishedAt.Sub(startedAt).Minutes()
+					dayDurations[day] = append(dayDurations[day], durationMinutes)
+				}
+				dayPassed[day]++
+				dailyPassedCount++
+			}
+			if build.State == "failed" {
+				dayFailed[day]++
+				dailyFailedCount++
+			}
+		}
+	}
+
+	// Calculate weekly metrics
+	var weeksWithDurations []string
+	for w := range weekDurations {
+		weeksWithDurations = append(weeksWithDurations, w)
+	}
+	sort.Strings(weeksWithDurations)
+
+	weeklyAvgDurations := make([]float64, len(weeksWithDurations))
+	for i, w := range weeksWithDurations {
+		durations := weekDurations[w]
+		if len(durations) > 0 {
+			var sum float64
+			for _, d := range durations {
+				sum += d
+			}
+			weeklyAvgDurations[i] = sum / float64(len(durations))
+		}
+	}
+
+	weeksMap := make(map[string]struct{})
+	for w := range weekPassed {
+		weeksMap[w] = struct{}{}
+	}
+	for w := range weekFailed {
+		weeksMap[w] = struct{}{}
+	}
+
+	var weeksForFailureRate []string
+	for w := range weeksMap {
+		weeksForFailureRate = append(weeksForFailureRate, w)
+	}
+	sort.Strings(weeksForFailureRate)
+
+	weeklyFailureRates := make([]float64, len(weeksForFailureRate))
+	weeklyPassedCounts := make([]int, len(weeksForFailureRate))
+	weeklyFailedCounts := make([]int, len(weeksForFailureRate))
+
+	for i, w := range weeksForFailureRate {
+		passed := weekPassed[w]
+		failed := weekFailed[w]
+		total := passed + failed
+
+		weeklyPassedCounts[i] = passed
+		weeklyFailedCounts[i] = failed
+
+		if total > 0 {
+			weeklyFailureRates[i] = float64(failed) / float64(total) * 100
+		}
+	}
+
+	// Calculate daily metrics
+	var daysWithDurations []string
+	for d := range dayDurations {
+		daysWithDurations = append(daysWithDurations, d)
+	}
+	sort.Strings(daysWithDurations)
+
+	dailyAvgDurations := make([]float64, len(daysWithDurations))
+	for i, d := range daysWithDurations {
+		durations := dayDurations[d]
+		if len(durations) > 0 {
+			var sum float64
+			for _, dur := range durations {
+				sum += dur
+			}
+			dailyAvgDurations[i] = sum / float64(len(durations))
+		}
+	}
+
+	daysMap := make(map[string]struct{})
+	for d := range dayPassed {
+		daysMap[d] = struct{}{}
+	}
+	for d := range dayFailed {
+		daysMap[d] = struct{}{}
+	}
+
+	var daysForFailureRate []string
+	for d := range daysMap {
+		daysForFailureRate = append(daysForFailureRate, d)
+	}
+	sort.Strings(daysForFailureRate)
+
+	dailyFailureRates := make([]float64, len(daysForFailureRate))
+	dailyPassedCounts := make([]int, len(daysForFailureRate))
+	dailyFailedCounts := make([]int, len(daysForFailureRate))
+
+	for i, d := range daysForFailureRate {
+		passed := dayPassed[d]
+		failed := dayFailed[d]
+		total := passed + failed
+
+		dailyPassedCounts[i] = passed
+		dailyFailedCounts[i] = failed
+
+		if total > 0 {
+			dailyFailureRates[i] = float64(failed) / float64(total) * 100
+		}
+	}
+
+	log.Printf("[BuildKite Combined] Processed in %v total (weekly: %d builds, daily: %d builds)",
+		time.Since(startTime), weeklyDeploymentCount, dailyDeploymentCount)
+
+	c.JSON(http.StatusOK, gin.H{
+		"weekly": gin.H{
+			"deployment_time": gin.H{
+				"weeks":             weeksWithDurations,
+				"avg_duration_mins": weeklyAvgDurations,
+			},
+			"failure_rate": gin.H{
+				"weeks":        weeksForFailureRate,
+				"failure_rate": weeklyFailureRates,
+				"passed":       weeklyPassedCounts,
+				"failed":       weeklyFailedCounts,
+			},
+		},
+		"daily": gin.H{
+			"deployment_time": gin.H{
+				"days":              daysWithDurations,
+				"avg_duration_mins": dailyAvgDurations,
+			},
+			"failure_rate": gin.H{
+				"days":         daysForFailureRate,
+				"failure_rate": dailyFailureRates,
+				"passed":       dailyPassedCounts,
+				"failed":       dailyFailedCounts,
+			},
+		},
+		"meta": gin.H{
+			"total_builds":         len(builds),
+			"weekly_deployments":   weeklyDeploymentCount,
+			"daily_deployments":    dailyDeploymentCount,
+			"date_range":           fmt.Sprintf("last 3 months (from %s)", threeMonthsAgo.Format("2006-01-02")),
+			"fetch_duration_sec":   fetchDuration.Seconds(),
+			"cached":               fetchDuration.Seconds() < 0.1,
+			"org":                  org,
+		},
+	})
+}
+
+// kpiBuildkiteCombined returns both deployment time and failure rate in a single request (weekly only - DEPRECATED, use kpiBuildkiteCombinedAll)
 func kpiBuildkiteCombined(c *gin.Context) {
 	token, org, ok := buildkiteConfig()
 	if !ok {

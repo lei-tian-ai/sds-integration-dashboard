@@ -167,54 +167,48 @@ const DashboardCompact = () => {
       })
       .catch(() => {})
 
-    // Fetch BuildKite metrics (combined endpoint - much faster!)
-    fetch('/api/kpi/buildkite-combined')
+    // Fetch BuildKite metrics (single optimized endpoint with caching - much faster!)
+    fetch('/api/kpi/buildkite-combined-all')
       .then((r) => r.json())
       .then((res) => {
-        // Deployment time data (only weeks with successful deployments)
-        const deployTimeWeeks = res.deployment_time?.weeks || []
-        const avgDuration = res.deployment_time?.avg_duration_mins || []
+        // Weekly deployment time data
+        const deployTimeWeeks = res.weekly?.deployment_time?.weeks || []
+        const weeklyAvgDuration = res.weekly?.deployment_time?.avg_duration_mins || []
         setDeployTimeData(deployTimeWeeks.map((week: string, i: number) => ({
           week,
-          duration: Math.round(avgDuration[i] * 10) / 10 || 0
+          duration: Math.round(weeklyAvgDuration[i] * 10) / 10 || 0
         })))
 
-        // Failure rate data (all weeks with any deployments)
-        const failureWeeks = res.failure_rate?.weeks || []
-        const failureRate = res.failure_rate?.failure_rate || []
-        const passed = res.failure_rate?.passed || []
-        const failed = res.failure_rate?.failed || []
+        // Weekly failure rate data
+        const failureWeeks = res.weekly?.failure_rate?.weeks || []
+        const weeklyFailureRate = res.weekly?.failure_rate?.failure_rate || []
+        const weeklyPassed = res.weekly?.failure_rate?.passed || []
+        const weeklyFailed = res.weekly?.failure_rate?.failed || []
         setDeployFailureData(failureWeeks.map((week: string, i: number) => ({
           week,
-          failureRate: Math.round(failureRate[i] * 10) / 10 || 0,
-          passed: passed[i] || 0,
-          failed: failed[i] || 0
+          failureRate: Math.round(weeklyFailureRate[i] * 10) / 10 || 0,
+          passed: weeklyPassed[i] || 0,
+          failed: weeklyFailed[i] || 0
         })))
-      })
-      .catch(() => {})
 
-    // Fetch BuildKite daily metrics (last 30 days)
-    fetch('/api/kpi/buildkite-combined-daily')
-      .then((r) => r.json())
-      .then((res) => {
-        // Deployment time data (daily - only days with successful deployments)
-        const deployTimeDays = res.deployment_time?.days || []
-        const avgDuration = res.deployment_time?.avg_duration_mins || []
+        // Daily deployment time data
+        const deployTimeDays = res.daily?.deployment_time?.days || []
+        const dailyAvgDuration = res.daily?.deployment_time?.avg_duration_mins || []
         setDeployTimeDataDaily(deployTimeDays.map((day: string, i: number) => ({
           day,
-          duration: Math.round(avgDuration[i] * 10) / 10 || 0
+          duration: Math.round(dailyAvgDuration[i] * 10) / 10 || 0
         })))
 
-        // Failure rate data (daily - all days with any deployments)
-        const failureDays = res.failure_rate?.days || []
-        const failureRate = res.failure_rate?.failure_rate || []
-        const passed = res.failure_rate?.passed || []
-        const failed = res.failure_rate?.failed || []
+        // Daily failure rate data
+        const failureDays = res.daily?.failure_rate?.days || []
+        const dailyFailureRate = res.daily?.failure_rate?.failure_rate || []
+        const dailyPassed = res.daily?.failure_rate?.passed || []
+        const dailyFailed = res.daily?.failure_rate?.failed || []
         setDeployFailureDataDaily(failureDays.map((day: string, i: number) => ({
           day,
-          failureRate: Math.round(failureRate[i] * 10) / 10 || 0,
-          passed: passed[i] || 0,
-          failed: failed[i] || 0
+          failureRate: Math.round(dailyFailureRate[i] * 10) / 10 || 0,
+          passed: dailyPassed[i] || 0,
+          failed: dailyFailed[i] || 0
         })))
       })
       .catch(() => {})

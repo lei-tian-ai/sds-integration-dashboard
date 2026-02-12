@@ -236,27 +236,16 @@ func kpiBuildkiteCombined(c *gin.Context) {
 		}
 	}
 
-	// Calculate metrics
-	weeksMap := make(map[string]struct{})
+	// Calculate metrics - separate weeks for deployment time (only successful) vs failure rate (all)
+	// For deployment time: only include weeks with successful deployments
+	var weeksWithDurations []string
 	for w := range weekDurations {
-		weeksMap[w] = struct{}{}
+		weeksWithDurations = append(weeksWithDurations, w)
 	}
-	for w := range weekPassed {
-		weeksMap[w] = struct{}{}
-	}
-	for w := range weekFailed {
-		weeksMap[w] = struct{}{}
-	}
+	sort.Strings(weeksWithDurations)
 
-	var weeks []string
-	for w := range weeksMap {
-		weeks = append(weeks, w)
-	}
-	sort.Strings(weeks)
-
-	// Deployment time
-	avgDurations := make([]float64, len(weeks))
-	for i, w := range weeks {
+	avgDurations := make([]float64, len(weeksWithDurations))
+	for i, w := range weeksWithDurations {
 		durations := weekDurations[w]
 		if len(durations) > 0 {
 			var sum float64
@@ -267,12 +256,26 @@ func kpiBuildkiteCombined(c *gin.Context) {
 		}
 	}
 
-	// Failure rate
-	failureRates := make([]float64, len(weeks))
-	passedCounts := make([]int, len(weeks))
-	failedCounts := make([]int, len(weeks))
+	// For failure rate: include all weeks with any deployments
+	weeksMap := make(map[string]struct{})
+	for w := range weekPassed {
+		weeksMap[w] = struct{}{}
+	}
+	for w := range weekFailed {
+		weeksMap[w] = struct{}{}
+	}
 
-	for i, w := range weeks {
+	var weeksForFailureRate []string
+	for w := range weeksMap {
+		weeksForFailureRate = append(weeksForFailureRate, w)
+	}
+	sort.Strings(weeksForFailureRate)
+
+	failureRates := make([]float64, len(weeksForFailureRate))
+	passedCounts := make([]int, len(weeksForFailureRate))
+	failedCounts := make([]int, len(weeksForFailureRate))
+
+	for i, w := range weeksForFailureRate {
 		passed := weekPassed[w]
 		failed := weekFailed[w]
 		total := passed + failed
@@ -289,11 +292,12 @@ func kpiBuildkiteCombined(c *gin.Context) {
 		deploymentCount, passedCount, failedCount, time.Since(startTime))
 
 	c.JSON(http.StatusOK, gin.H{
-		"weeks": weeks,
 		"deployment_time": gin.H{
+			"weeks":             weeksWithDurations,
 			"avg_duration_mins": avgDurations,
 		},
 		"failure_rate": gin.H{
+			"weeks":        weeksForFailureRate,
 			"failure_rate": failureRates,
 			"passed":       passedCounts,
 			"failed":       failedCounts,
@@ -380,27 +384,16 @@ func kpiBuildkiteCombinedDaily(c *gin.Context) {
 		}
 	}
 
-	// Calculate metrics
-	daysMap := make(map[string]struct{})
+	// Calculate metrics - separate days for deployment time (only successful) vs failure rate (all)
+	// For deployment time: only include days with successful deployments
+	var daysWithDurations []string
 	for d := range dayDurations {
-		daysMap[d] = struct{}{}
+		daysWithDurations = append(daysWithDurations, d)
 	}
-	for d := range dayPassed {
-		daysMap[d] = struct{}{}
-	}
-	for d := range dayFailed {
-		daysMap[d] = struct{}{}
-	}
+	sort.Strings(daysWithDurations)
 
-	var days []string
-	for d := range daysMap {
-		days = append(days, d)
-	}
-	sort.Strings(days)
-
-	// Deployment time
-	avgDurations := make([]float64, len(days))
-	for i, d := range days {
+	avgDurations := make([]float64, len(daysWithDurations))
+	for i, d := range daysWithDurations {
 		durations := dayDurations[d]
 		if len(durations) > 0 {
 			var sum float64
@@ -411,12 +404,26 @@ func kpiBuildkiteCombinedDaily(c *gin.Context) {
 		}
 	}
 
-	// Failure rate
-	failureRates := make([]float64, len(days))
-	passedCounts := make([]int, len(days))
-	failedCounts := make([]int, len(days))
+	// For failure rate: include all days with any deployments
+	daysMap := make(map[string]struct{})
+	for d := range dayPassed {
+		daysMap[d] = struct{}{}
+	}
+	for d := range dayFailed {
+		daysMap[d] = struct{}{}
+	}
 
-	for i, d := range days {
+	var daysForFailureRate []string
+	for d := range daysMap {
+		daysForFailureRate = append(daysForFailureRate, d)
+	}
+	sort.Strings(daysForFailureRate)
+
+	failureRates := make([]float64, len(daysForFailureRate))
+	passedCounts := make([]int, len(daysForFailureRate))
+	failedCounts := make([]int, len(daysForFailureRate))
+
+	for i, d := range daysForFailureRate {
 		passed := dayPassed[d]
 		failed := dayFailed[d]
 		total := passed + failed
@@ -433,11 +440,12 @@ func kpiBuildkiteCombinedDaily(c *gin.Context) {
 		deploymentCount, passedCount, failedCount, time.Since(startTime))
 
 	c.JSON(http.StatusOK, gin.H{
-		"days": days,
 		"deployment_time": gin.H{
+			"days":              daysWithDurations,
 			"avg_duration_mins": avgDurations,
 		},
 		"failure_rate": gin.H{
+			"days":         daysForFailureRate,
 			"failure_rate": failureRates,
 			"passed":       passedCounts,
 			"failed":       failedCounts,

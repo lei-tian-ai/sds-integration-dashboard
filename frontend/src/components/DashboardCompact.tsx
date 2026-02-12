@@ -171,20 +171,20 @@ const DashboardCompact = () => {
     fetch('/api/kpi/buildkite-combined')
       .then((r) => r.json())
       .then((res) => {
-        const weeks = res.weeks || []
-
-        // Deployment time data
+        // Deployment time data (only weeks with successful deployments)
+        const deployTimeWeeks = res.deployment_time?.weeks || []
         const avgDuration = res.deployment_time?.avg_duration_mins || []
-        setDeployTimeData(weeks.map((week: string, i: number) => ({
+        setDeployTimeData(deployTimeWeeks.map((week: string, i: number) => ({
           week,
           duration: Math.round(avgDuration[i] * 10) / 10 || 0
         })))
 
-        // Failure rate data
+        // Failure rate data (all weeks with any deployments)
+        const failureWeeks = res.failure_rate?.weeks || []
         const failureRate = res.failure_rate?.failure_rate || []
         const passed = res.failure_rate?.passed || []
         const failed = res.failure_rate?.failed || []
-        setDeployFailureData(weeks.map((week: string, i: number) => ({
+        setDeployFailureData(failureWeeks.map((week: string, i: number) => ({
           week,
           failureRate: Math.round(failureRate[i] * 10) / 10 || 0,
           passed: passed[i] || 0,
@@ -197,20 +197,20 @@ const DashboardCompact = () => {
     fetch('/api/kpi/buildkite-combined-daily')
       .then((r) => r.json())
       .then((res) => {
-        const days = res.days || []
-
-        // Deployment time data (daily)
+        // Deployment time data (daily - only days with successful deployments)
+        const deployTimeDays = res.deployment_time?.days || []
         const avgDuration = res.deployment_time?.avg_duration_mins || []
-        setDeployTimeDataDaily(days.map((day: string, i: number) => ({
+        setDeployTimeDataDaily(deployTimeDays.map((day: string, i: number) => ({
           day,
           duration: Math.round(avgDuration[i] * 10) / 10 || 0
         })))
 
-        // Failure rate data (daily)
+        // Failure rate data (daily - all days with any deployments)
+        const failureDays = res.failure_rate?.days || []
         const failureRate = res.failure_rate?.failure_rate || []
         const passed = res.failure_rate?.passed || []
         const failed = res.failure_rate?.failed || []
-        setDeployFailureDataDaily(days.map((day: string, i: number) => ({
+        setDeployFailureDataDaily(failureDays.map((day: string, i: number) => ({
           day,
           failureRate: Math.round(failureRate[i] * 10) / 10 || 0,
           passed: passed[i] || 0,

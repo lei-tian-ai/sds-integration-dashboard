@@ -21,6 +21,7 @@ const DetailedData = () => {
   const [bugsData, setBugsData] = useState<any>(null)
   const [mtbfData, setMtbfData] = useState<any>(null)
   const [buildkiteData, setBuildkiteData] = useState<any>(null)
+  const [dataCollectionData, setDataCollectionData] = useState<any>(null)
 
   useEffect(() => {
     setLoading(true)
@@ -32,13 +33,15 @@ const DetailedData = () => {
       fetch('/api/kpi/build-bugs').then(r => r.json()),
       fetch('/api/kpi/mtbf').then(r => r.json()),
       fetch('/api/kpi/buildkite-combined-all').then(r => r.json()),
+      fetch('/api/kpi/data-collection-efficiency').then(r => r.json()),
     ])
-      .then(([timeInBuild, vos, bugs, mtbf, buildkite]) => {
+      .then(([timeInBuild, vos, bugs, mtbf, buildkite, dataCollection]) => {
         setTimeInBuildData(timeInBuild)
         setVosData(vos)
         setBugsData(bugs)
         setMtbfData(mtbf)
         setBuildkiteData(buildkite)
+        setDataCollectionData(dataCollection)
       })
       .catch(err => console.error('Error fetching data:', err))
       .finally(() => setLoading(false))
@@ -51,6 +54,7 @@ const DetailedData = () => {
     { id: 'build-bugs', label: '#4 Build Issues' },
     { id: 'deployment-time', label: '#5 Deployment Time' },
     { id: 'deployment-failure', label: '#6 Deployment Failure' },
+    { id: 'data-collection', label: '#7 Data Collection Efficiency' },
   ]
 
   const renderJsonData = (data: any, title: string) => {
@@ -170,6 +174,8 @@ const DetailedData = () => {
               {buildkiteData?.daily?.failure_rate && renderJsonData(buildkiteData.daily.failure_rate, 'Deployment Failure Rate (Daily)')}
             </>
           )}
+
+          {activeTab === 'data-collection' && renderJsonData(dataCollectionData, 'Data Collection Efficiency - Full API Response (Placeholder)')}
         </div>
       </div>
     </div>

@@ -1306,3 +1306,49 @@ func kpiMTBF(c *gin.Context) {
 		"meta":     meta,
 	})
 }
+
+// kpiDataCollectionEfficiency returns placeholder data for Data Collection Efficiency KPI.
+// TODO: Integrate with lakehouse via KunaalC's query service for real data.
+// Formula: (hours of valid/usable data) / (total driving hours) * 100
+// Target: >95%
+func kpiDataCollectionEfficiency(c *gin.Context) {
+	log.Println("[DataCollectionEfficiency] Returning placeholder data - TODO: integrate with lakehouse")
+
+	// Generate placeholder data for the last 10 weeks
+	now := time.Now()
+	tenWeeksAgo := now.AddDate(0, 0, -70) // ~10 weeks
+
+	// Find the start of the week 10 weeks ago (Monday)
+	startDate := tenWeeksAgo
+	for startDate.Weekday() != time.Monday {
+		startDate = startDate.AddDate(0, 0, -1)
+	}
+
+	var weeks []string
+	var efficiencyPercentages []float64
+
+	// Generate mock data with some variation around 95% target
+	for weekStart := startDate; weekStart.Before(now); weekStart = weekStart.AddDate(0, 0, 7) {
+		weeks = append(weeks, weekKey(weekStart))
+		// Mock data: efficiency between 92% and 98%
+		// Add some realistic variation
+		baseEfficiency := 95.0
+		variation := float64((len(weeks) % 5) - 2) // -2 to +2
+		efficiency := baseEfficiency + variation
+		efficiencyPercentages = append(efficiencyPercentages, efficiency)
+	}
+
+	meta := gin.H{
+		"data_source": "PLACEHOLDER - awaiting lakehouse integration",
+		"formula":     "(valid data hours) / (total driving hours) * 100",
+		"target":      ">95%",
+		"status":      "TODO: Integrate with KunaalC's query service for neuron/frontier/mosaic clusters",
+		"note":        "Currently returning mock data. Real implementation requires ADP auth and lakehouse query API.",
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"weeks":                 weeks,
+		"efficiency_percentage": efficiencyPercentages,
+		"meta":                  meta,
+	})
+}

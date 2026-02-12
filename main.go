@@ -46,6 +46,7 @@ func main() {
 		api.GET("/kpi/buildkite-combined", kpiBuildkiteCombined)                 // Optimized: both metrics in one call (weekly, 3 months) - DEPRECATED
 		api.GET("/kpi/buildkite-combined-daily", kpiBuildkiteCombinedDaily)      // Daily metrics (last 30 days) - DEPRECATED
 		api.GET("/kpi/buildkite-combined-all", kpiBuildkiteCombinedAll)          // Optimized: weekly + daily in one call with caching
+		api.GET("/kpi/data-collection-efficiency", kpiDataCollectionEfficiency)  // TODO: Integrate with lakehouse via KunaalC's query service
 	}
 
 	// Serve embedded frontend in production, or proxy to Vite in dev

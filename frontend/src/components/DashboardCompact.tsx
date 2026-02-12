@@ -106,6 +106,7 @@ const DashboardCompact = () => {
   const [deployFailureData, setDeployFailureData] = useState<any[]>([])
   const [deployTimeDataDaily, setDeployTimeDataDaily] = useState<any[]>([])
   const [deployFailureDataDaily, setDeployFailureDataDaily] = useState<any[]>([])
+  const [dataCollectionEfficiency, setDataCollectionEfficiency] = useState<any[]>([])
 
   useEffect(() => {
     // Fetch Time in Build
@@ -209,6 +210,19 @@ const DashboardCompact = () => {
           failureRate: Math.round(dailyFailureRate[i] * 10) / 10 || 0,
           passed: dailyPassed[i] || 0,
           failed: dailyFailed[i] || 0
+        })))
+      })
+      .catch(() => {})
+
+    // Fetch Data Collection Efficiency (placeholder - will integrate with lakehouse via KunaalC's query service)
+    fetch('/api/kpi/data-collection-efficiency')
+      .then((r) => r.json())
+      .then((res) => {
+        const weeks = res.weeks || []
+        const efficiency = res.efficiency_percentage || []
+        setDataCollectionEfficiency(weeks.map((week: string, i: number) => ({
+          week,
+          efficiency: Math.round(efficiency[i] * 10) / 10 || 0
         })))
       })
       .catch(() => {})
@@ -417,6 +431,23 @@ const DashboardCompact = () => {
                     }}
                   />
                 </Line>
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Widget 10: Data Collection Efficiency */}
+          <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">#7 Data Collection Efficiency</h2>
+            <p className="text-xs text-gray-500 mb-3">Valid data hours / Total driving hours (Target: &gt;95%)</p>
+            <ResponsiveContainer width="100%" height="85%">
+              <LineChart data={dataCollectionEfficiency} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="week" stroke="#6b7280" fontSize={10} />
+                <YAxis stroke="#6b7280" fontSize={10} domain={[0, 100]} />
+                <Tooltip contentStyle={{ fontSize: '12px' }} />
+                <Legend wrapperStyle={{ fontSize: '11px' }} />
+                <ReferenceLine y={95} stroke="#3b82f6" strokeDasharray="5 5" strokeWidth={1} label={{ value: 'Target: 95%', fontSize: 10, fill: '#3b82f6' }} />
+                <Line type="linear" dataKey="efficiency" stroke="#10b981" strokeWidth={2} dot={{ r: 3 }} name="Efficiency %" />
               </LineChart>
             </ResponsiveContainer>
           </div>

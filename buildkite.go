@@ -69,7 +69,7 @@ func fetchBuilds(c *gin.Context, token, org string, createdFrom time.Time) ([]Bu
 
 	// Fetch from both deployment pipelines
 	for _, pipeline := range pipelines {
-		pipelineBuilds, err := fetchBuildsFromPipeline(c, token, org, pipeline, createdFrom)
+		pipelineBuilds, err := fetchBuildsFromPipelineSequential(c, token, org, pipeline, createdFrom)
 		if err != nil {
 			log.Printf("[BuildKite] Warning: Failed to fetch from %s: %v", pipeline, err)
 			continue
@@ -81,8 +81,8 @@ func fetchBuilds(c *gin.Context, token, org string, createdFrom time.Time) ([]Bu
 	return allBuilds, nil
 }
 
-// fetchBuildsFromPipeline fetches builds from a single pipeline
-func fetchBuildsFromPipeline(c *gin.Context, token, org, pipeline string, createdFrom time.Time) ([]BuildkiteBuild, error) {
+// fetchBuildsFromPipelineSequential fetches builds from a single pipeline (sequential pagination)
+func fetchBuildsFromPipelineSequential(c *gin.Context, token, org, pipeline string, createdFrom time.Time) ([]BuildkiteBuild, error) {
 	var builds []BuildkiteBuild
 
 	for page := 1; page <= buildkiteMaxPages; page++ {

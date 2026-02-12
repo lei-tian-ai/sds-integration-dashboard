@@ -287,6 +287,22 @@ const DashboardCompact = () => {
             </ResponsiveContainer>
           </div>
 
+          {/* Widget 3: MTBF */}
+          <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">#3 Mean Time Between Failure (MTBF)</h2>
+            <p className="text-xs text-gray-500 mb-3">Vehicle stability failures (operation hours pending)</p>
+            <ResponsiveContainer width="100%" height="85%">
+              <LineChart data={mtbfData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="week" stroke="#6b7280" fontSize={10} />
+                <YAxis stroke="#6b7280" fontSize={10} />
+                <Tooltip contentStyle={{ fontSize: '12px' }} />
+                <Legend wrapperStyle={{ fontSize: '11px' }} />
+                <Line type="linear" dataKey="failures" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} name="Failures" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
           {/* Widget 4: Build Bugs */}
           <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
             <h2 className="text-lg font-semibold text-gray-900 mb-2">#4 Build Issues Caught After Release to Calibration</h2>
@@ -301,22 +317,6 @@ const DashboardCompact = () => {
                 <ReferenceLine y={1} stroke="#3b82f6" strokeDasharray="5 5" strokeWidth={1} label={{ value: 'Target: <1', fontSize: 10, fill: '#3b82f6' }} />
                 <Line type="linear" dataKey="created" stroke="#dc2626" strokeWidth={2} dot={{ r: 3 }} name="Created" />
                 <Line type="linear" dataKey="resolved" stroke="#16a34a" strokeWidth={2} dot={{ r: 3 }} name="Resolved" />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-
-          {/* Widget 5: MTBF */}
-          <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">#3 Mean Time Between Failure (MTBF)</h2>
-            <p className="text-xs text-gray-500 mb-3">Vehicle stability failures (operation hours pending)</p>
-            <ResponsiveContainer width="100%" height="85%">
-              <LineChart data={mtbfData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
-                <XAxis dataKey="week" stroke="#6b7280" fontSize={10} />
-                <YAxis stroke="#6b7280" fontSize={10} />
-                <Tooltip contentStyle={{ fontSize: '12px' }} />
-                <Legend wrapperStyle={{ fontSize: '11px' }} />
-                <Line type="linear" dataKey="failures" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3 }} name="Failures" />
               </LineChart>
             </ResponsiveContainer>
           </div>

@@ -43,7 +43,8 @@ func main() {
 		api.GET("/fleetio/vehicles", fleetioVehicles)
 		api.GET("/kpi/buildkite-deployment-time", kpiBuildkiteDeploymentTime)
 		api.GET("/kpi/buildkite-deployment-failure-rate", kpiBuildkiteDeploymentFailureRate)
-		api.GET("/kpi/buildkite-combined", kpiBuildkiteCombined) // Optimized: both metrics in one call
+		api.GET("/kpi/buildkite-combined", kpiBuildkiteCombined)           // Optimized: both metrics in one call (weekly, 3 months)
+		api.GET("/kpi/buildkite-combined-daily", kpiBuildkiteCombinedDaily) // Daily metrics (last 30 days)
 	}
 
 	// Serve embedded frontend in production, or proxy to Vite in dev

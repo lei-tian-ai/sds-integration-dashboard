@@ -104,6 +104,8 @@ const DashboardCompact = () => {
   const [mtbfData, setMtbfData] = useState<any[]>([])
   const [deployTimeData, setDeployTimeData] = useState<any[]>([])
   const [deployFailureData, setDeployFailureData] = useState<any[]>([])
+  const [deployTimeDataDaily, setDeployTimeDataDaily] = useState<any[]>([])
+  const [deployFailureDataDaily, setDeployFailureDataDaily] = useState<any[]>([])
 
   useEffect(() => {
     // Fetch Time in Build
@@ -184,6 +186,32 @@ const DashboardCompact = () => {
         const failed = res.failure_rate?.failed || []
         setDeployFailureData(weeks.map((week: string, i: number) => ({
           week,
+          failureRate: Math.round(failureRate[i] * 10) / 10 || 0,
+          passed: passed[i] || 0,
+          failed: failed[i] || 0
+        })))
+      })
+      .catch(() => {})
+
+    // Fetch BuildKite daily metrics (last 30 days)
+    fetch('/api/kpi/buildkite-combined-daily')
+      .then((r) => r.json())
+      .then((res) => {
+        const days = res.days || []
+
+        // Deployment time data (daily)
+        const avgDuration = res.deployment_time?.avg_duration_mins || []
+        setDeployTimeDataDaily(days.map((day: string, i: number) => ({
+          day,
+          duration: Math.round(avgDuration[i] * 10) / 10 || 0
+        })))
+
+        // Failure rate data (daily)
+        const failureRate = res.failure_rate?.failure_rate || []
+        const passed = res.failure_rate?.passed || []
+        const failed = res.failure_rate?.failed || []
+        setDeployFailureDataDaily(days.map((day: string, i: number) => ({
+          day,
           failureRate: Math.round(failureRate[i] * 10) / 10 || 0,
           passed: passed[i] || 0,
           failed: failed[i] || 0
@@ -335,9 +363,9 @@ const DashboardCompact = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Widget 6: Average Deployment Time */}
+          {/* Widget 6: Average Deployment Time -- weekly */}
           <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Avg Deployment Time</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Avg Deployment Time -- weekly</h2>
             <p className="text-xs text-gray-500 mb-3">BuildKite deployment duration (minutes)</p>
             <ResponsiveContainer width="100%" height="85%">
               <LineChart data={deployTimeData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
@@ -351,9 +379,9 @@ const DashboardCompact = () => {
             </ResponsiveContainer>
           </div>
 
-          {/* Widget 7: Deployment Failure Rate */}
+          {/* Widget 7: Deployment Failure Rate -- weekly */}
           <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-2">Deployment Failure Rate</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Deployment Failure Rate -- weekly</h2>
             <p className="text-xs text-gray-500 mb-3">BuildKite deployment success vs. failure</p>
             <ResponsiveContainer width="100%" height="85%">
               <LineChart data={deployFailureData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
@@ -369,6 +397,56 @@ const DashboardCompact = () => {
                       const { x, y, index } = props
                       if (index === undefined) return null
                       const point = deployFailureData[index]
+                      if (!point) return null
+                      const total = (point.passed || 0) + (point.failed || 0)
+                      const failed = point.failed || 0
+                      return (
+                        <text x={x} y={y - 15} textAnchor="middle" fontSize={8} fill="#6b7280">
+                          <tspan x={x} dy={0}>{total} total</tspan>
+                          <tspan x={x} dy={10}>{failed} failed</tspan>
+                        </text>
+                      )
+                    }}
+                  />
+                </Line>
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Widget 8: Average Deployment Time -- daily */}
+          <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Avg Deployment Time -- daily</h2>
+            <p className="text-xs text-gray-500 mb-3">BuildKite deployment duration (minutes, last 30 days)</p>
+            <ResponsiveContainer width="100%" height="85%">
+              <LineChart data={deployTimeDataDaily} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="day" stroke="#6b7280" fontSize={10} angle={-45} textAnchor="end" height={60} />
+                <YAxis stroke="#6b7280" fontSize={10} />
+                <Tooltip contentStyle={{ fontSize: '12px' }} />
+                <Legend wrapperStyle={{ fontSize: '11px' }} />
+                <Line type="linear" dataKey="duration" stroke="#8b5cf6" strokeWidth={2} dot={{ r: 3 }} name="Minutes" />
+              </LineChart>
+            </ResponsiveContainer>
+          </div>
+
+          {/* Widget 9: Deployment Failure Rate -- daily */}
+          <div className="bg-white rounded-lg border border-gray-300 p-4 h-[350px]">
+            <h2 className="text-lg font-semibold text-gray-900 mb-2">Deployment Failure Rate -- daily</h2>
+            <p className="text-xs text-gray-500 mb-3">BuildKite deployment success vs. failure (last 30 days)</p>
+            <ResponsiveContainer width="100%" height="85%">
+              <LineChart data={deployFailureDataDaily} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
+                <XAxis dataKey="day" stroke="#6b7280" fontSize={10} angle={-45} textAnchor="end" height={60} />
+                <YAxis stroke="#6b7280" fontSize={10} />
+                <Tooltip contentStyle={{ fontSize: '12px' }} />
+                <Legend wrapperStyle={{ fontSize: '11px' }} />
+                <ReferenceLine y={5} stroke="#3b82f6" strokeDasharray="5 5" strokeWidth={1} label={{ value: 'Target: <5%', fontSize: 10, fill: '#3b82f6' }} />
+                <Line type="linear" dataKey="failureRate" stroke="#dc2626" strokeWidth={2} dot={{ r: 3 }} name="Failure %">
+                  <LabelList
+                    content={(props: any) => {
+                      const { x, y, index } = props
+                      if (index === undefined) return null
+                      const point = deployFailureDataDaily[index]
                       if (!point) return null
                       const total = (point.passed || 0) + (point.failed || 0)
                       const failed = point.failed || 0

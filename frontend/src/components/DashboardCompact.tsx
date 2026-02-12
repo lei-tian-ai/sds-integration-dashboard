@@ -248,7 +248,7 @@ const DashboardCompact = () => {
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Time in Build</h2>
             <p className="text-xs text-gray-500 mb-3">Average days by vehicle type</p>
             <ResponsiveContainer width="100%" height="85%">
-              <LineChart data={chartData} margin={{ top: 5, right: 80, left: 0, bottom: 5 }}>
+              <LineChart data={chartData} margin={{ top: 5, right: 80, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="week" stroke="#6b7280" fontSize={10} />
                 <YAxis stroke="#6b7280" fontSize={10} />
@@ -288,7 +288,7 @@ const DashboardCompact = () => {
             <h2 className="text-lg font-semibold text-gray-900 mb-2">VOS Tickets in Build</h2>
             <p className="text-xs text-gray-500 mb-3">Vehicle OS engineer workload</p>
             <ResponsiveContainer width="100%" height="85%">
-              <LineChart data={vosData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <LineChart data={vosData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="week" stroke="#6b7280" fontSize={10} />
                 <YAxis stroke="#6b7280" fontSize={10} />
@@ -306,7 +306,7 @@ const DashboardCompact = () => {
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Bug Tickets in Build</h2>
             <p className="text-xs text-gray-500 mb-3">Issues caught after calibration</p>
             <ResponsiveContainer width="100%" height="85%">
-              <LineChart data={bugsData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <LineChart data={bugsData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="week" stroke="#6b7280" fontSize={10} />
                 <YAxis stroke="#6b7280" fontSize={10} />
@@ -324,7 +324,7 @@ const DashboardCompact = () => {
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Mean Time Between Failure (MTBF)</h2>
             <p className="text-xs text-gray-500 mb-3">Vehicle stability failures (operation hours pending)</p>
             <ResponsiveContainer width="100%" height="85%">
-              <LineChart data={mtbfData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <LineChart data={mtbfData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="week" stroke="#6b7280" fontSize={10} />
                 <YAxis stroke="#6b7280" fontSize={10} />
@@ -340,7 +340,7 @@ const DashboardCompact = () => {
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Avg Deployment Time</h2>
             <p className="text-xs text-gray-500 mb-3">BuildKite deployment duration (minutes)</p>
             <ResponsiveContainer width="100%" height="85%">
-              <LineChart data={deployTimeData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <LineChart data={deployTimeData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="week" stroke="#6b7280" fontSize={10} />
                 <YAxis stroke="#6b7280" fontSize={10} />
@@ -356,7 +356,7 @@ const DashboardCompact = () => {
             <h2 className="text-lg font-semibold text-gray-900 mb-2">Deployment Failure Rate</h2>
             <p className="text-xs text-gray-500 mb-3">BuildKite deployment success vs. failure</p>
             <ResponsiveContainer width="100%" height="85%">
-              <LineChart data={deployFailureData} margin={{ top: 5, right: 20, left: 0, bottom: 5 }}>
+              <LineChart data={deployFailureData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" />
                 <XAxis dataKey="week" stroke="#6b7280" fontSize={10} />
                 <YAxis stroke="#6b7280" fontSize={10} />

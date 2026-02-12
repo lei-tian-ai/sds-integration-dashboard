@@ -60,10 +60,30 @@ type BuildkiteBuild struct {
 // fetchBuilds fetches builds from BuildKite API with pagination
 // For deployment pipeline, fetch from specific pipeline endpoint instead of org-wide
 func fetchBuilds(c *gin.Context, token, org string, createdFrom time.Time) ([]BuildkiteBuild, error) {
+	pipelines := []string{
+		"core-stack-deployment-pipeline",
+		"core-stack-deployment-pipeline-legacy",
+	}
+
 	var allBuilds []BuildkiteBuild
 
-	// Fetch directly from the deployment pipeline for better filtering
-	pipeline := "core-stack-deployment-pipeline-legacy"
+	// Fetch from both deployment pipelines
+	for _, pipeline := range pipelines {
+		pipelineBuilds, err := fetchBuildsFromPipeline(c, token, org, pipeline, createdFrom)
+		if err != nil {
+			log.Printf("[BuildKite] Warning: Failed to fetch from %s: %v", pipeline, err)
+			continue
+		}
+		allBuilds = append(allBuilds, pipelineBuilds...)
+	}
+
+	log.Printf("[BuildKite] Total builds fetched from all pipelines: %d", len(allBuilds))
+	return allBuilds, nil
+}
+
+// fetchBuildsFromPipeline fetches builds from a single pipeline
+func fetchBuildsFromPipeline(c *gin.Context, token, org, pipeline string, createdFrom time.Time) ([]BuildkiteBuild, error) {
+	var builds []BuildkiteBuild
 
 	for page := 1; page <= buildkiteMaxPages; page++ {
 		query := url.Values{}
@@ -93,35 +113,36 @@ func fetchBuilds(c *gin.Context, token, org string, createdFrom time.Time) ([]Bu
 		}
 
 		var builds []BuildkiteBuild
-		if err := json.Unmarshal(body, &builds); err != nil {
+		var pageBuilds []BuildkiteBuild
+		if err := json.Unmarshal(body, &pageBuilds); err != nil {
 			return nil, err
 		}
 
-		if len(builds) == 0 {
+		if len(pageBuilds) == 0 {
 			break
 		}
 
-		allBuilds = append(allBuilds, builds...)
+		builds = append(builds, pageBuilds...)
 
 		// If we got fewer than per_page, we've reached the last page
-		if len(builds) < buildkitePerPage {
+		if len(pageBuilds) < buildkitePerPage {
 			break
 		}
 
-		log.Printf("[BuildKite] Fetched page %d (%d builds, %d total)", page, len(builds), len(allBuilds))
+		log.Printf("[BuildKite] Fetched %s page %d (%d builds, %d total)", pipeline, page, len(pageBuilds), len(builds))
 	}
 
-	log.Printf("[BuildKite] Total builds fetched: %d", len(allBuilds))
-	return allBuilds, nil
+	log.Printf("[BuildKite] Total builds fetched from %s: %d", pipeline, len(builds))
+	return builds, nil
 }
 
 // isDeploymentPipeline checks if a build is from a deployment pipeline
-// Configured to track: Core Stack Deployment Pipeline Legacy
+// Configured to track: Core Stack Deployment Pipeline and Legacy
 func isDeploymentPipeline(build BuildkiteBuild) bool {
 	slug := strings.ToLower(build.Pipeline.Slug)
 
-	// Track Core Stack Deployment Pipeline Legacy
-	if slug == "core-stack-deployment-pipeline-legacy" {
+	// Track both deployment pipelines
+	if slug == "core-stack-deployment-pipeline" || slug == "core-stack-deployment-pipeline-legacy" {
 		return true
 	}
 

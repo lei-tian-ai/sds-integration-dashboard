@@ -17,10 +17,8 @@ import (
 // Rate limiter for BuildKite API (200 req/min = ~3 req/sec)
 var buildkiteRateLimiter = time.NewTicker(350 * time.Millisecond) // ~2.85 req/sec to be safe
 
-// fetchBuildsParallel fetches builds from BuildKite API with parallel pagination
-func fetchBuildsParallel(c *gin.Context, token, org string, createdFrom time.Time) ([]BuildkiteBuild, error) {
-	pipeline := "core-stack-deployment-pipeline-legacy"
-
+// fetchBuildsFromPipeline fetches builds from a single pipeline with parallel pagination
+func fetchBuildsFromPipeline(c *gin.Context, token, org, pipeline string, createdFrom time.Time) ([]BuildkiteBuild, error) {
 	// First, fetch page 1 to check total count
 	firstPageURL := fmt.Sprintf("%s/organizations/%s/pipelines/%s/builds?created_from=%s&per_page=%d&page=1",
 		buildkiteBaseURL, org, pipeline, url.QueryEscape(createdFrom.Format(time.RFC3339)), buildkitePerPage)
@@ -148,8 +146,29 @@ func fetchBuildsParallel(c *gin.Context, token, org string, createdFrom time.Tim
 		}
 	}
 
-	log.Printf("[BuildKite] Total builds fetched: %d (%d pages in parallel)", len(combined), len(allBuilds))
+	log.Printf("[BuildKite] Total builds fetched from %s: %d (%d pages in parallel)", pipeline, len(combined), len(allBuilds))
 	return combined, nil
+}
+
+// fetchBuildsParallel fetches builds from both deployment pipelines
+func fetchBuildsParallel(c *gin.Context, token, org string, createdFrom time.Time) ([]BuildkiteBuild, error) {
+	pipelines := []string{
+		"core-stack-deployment-pipeline",
+		"core-stack-deployment-pipeline-legacy",
+	}
+
+	var allBuilds []BuildkiteBuild
+	for _, pipeline := range pipelines {
+		builds, err := fetchBuildsFromPipeline(c, token, org, pipeline, createdFrom)
+		if err != nil {
+			log.Printf("[BuildKite] Warning: Failed to fetch from %s: %v", pipeline, err)
+			continue // Continue with other pipelines even if one fails
+		}
+		allBuilds = append(allBuilds, builds...)
+	}
+
+	log.Printf("[BuildKite] Total builds fetched from all pipelines: %d", len(allBuilds))
+	return allBuilds, nil
 }
 
 // kpiBuildkiteCombined returns both deployment time and failure rate in a single request

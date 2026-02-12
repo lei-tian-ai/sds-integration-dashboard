@@ -209,7 +209,7 @@ const DashboardCompact = () => {
         <div className="grid grid-cols-3 gap-4">
           {/* Widget 1: Cars in Build (scrollable table) */}
           <div className="bg-white rounded-lg border border-gray-300 p-4 flex flex-col h-[350px]">
-            <h2 className="text-lg font-semibold text-gray-900 mb-3">Cars in Build</h2>
+            <h2 className="text-lg font-semibold text-gray-900 mb-3">Cars Built</h2>
             <div className="overflow-auto flex-1">
               <table className="w-full text-xs border-collapse">
                 <thead className="sticky top-0 bg-white">

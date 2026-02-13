@@ -107,8 +107,9 @@ const DashboardCompact = () => {
   const [deployTimeDataDaily, setDeployTimeDataDaily] = useState<any[]>([])
   const [deployFailureDataDaily, setDeployFailureDataDaily] = useState<any[]>([])
   const [dataCollectionEfficiency, setDataCollectionEfficiency] = useState<any[]>([])
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date())
 
-  useEffect(() => {
+  const fetchAllData = () => {
     // Fetch Time in Build
     fetch('/api/kpi/time-in-build?filter_id=22515')
       .then((r) => r.json())
@@ -226,6 +227,28 @@ const DashboardCompact = () => {
         })))
       })
       .catch(() => {})
+
+    setLastUpdated(new Date())
+  }
+
+  useEffect(() => {
+    // Initial fetch
+    fetchAllData()
+
+    // Refresh data every 3 hours
+    const dataInterval = setInterval(() => {
+      fetchAllData()
+    }, 3 * 60 * 60 * 1000) // 3 hours in milliseconds
+
+    // Full page reload every 24 hours
+    const pageInterval = setInterval(() => {
+      window.location.reload()
+    }, 24 * 60 * 60 * 1000) // 24 hours in milliseconds
+
+    return () => {
+      clearInterval(dataInterval)
+      clearInterval(pageInterval)
+    }
   }, [])
 
   if (loading) {
@@ -239,7 +262,12 @@ const DashboardCompact = () => {
   return (
     <div className="flex-1 overflow-auto">
       <div className="p-6 pl-20">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">SDS integration dashboard -- Onroad</h1>
+        <div className="flex items-center justify-between mb-6">
+          <h1 className="text-2xl font-bold text-gray-900">SDS integration dashboard -- Onroad</h1>
+          <div className="text-sm text-gray-500">
+            Last updated: {lastUpdated.toLocaleString()}
+          </div>
+        </div>
 
         {/* 3-column grid */}
         <div className="grid grid-cols-3 gap-4">
